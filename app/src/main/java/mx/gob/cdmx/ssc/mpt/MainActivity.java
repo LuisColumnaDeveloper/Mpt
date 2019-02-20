@@ -6,6 +6,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
+import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -16,30 +17,45 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.android.volley.AuthFailureError;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
 import com.skyfishjy.library.RippleBackground;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
 
 public class MainActivity extends AppCompatActivity implements EasyPermissions.PermissionCallbacks {
 
-
+    String url ="http://10.13.9.190/mpt";
     RippleBackground rippleBackground;
     ImageView imgViewTruck;
     Context context;
 
-
     LocationManager locationManager;
-    double longitudeBest, latitudeBest;
-    double longitudeGPS, latitudeGPS;
+    RequestQueue queue;
+
     double longitudeNetwork, latitudeNetwork;
+    double longitudeGPS, latitudeGPS;
+    double longitudeBest, latitudeBest;
 
     private static final int RC_CAMERA_AND_LOCATION = 1;
 
@@ -50,22 +66,18 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         context = MainActivity.this;
 
         this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+        queue = Volley.newRequestQueue(this);
 
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
         rippleBackground = (RippleBackground) findViewById(R.id.content);
         imgViewTruck = (ImageView) findViewById(R.id.truck);
 
-        rippleBackground.startRippleAnimation();
-
         imgViewTruck.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
+                locationManager.removeUpdates(locationListenerNetwork);
                 rippleBackground.stopRippleAnimation();
-
-                locationManager.removeUpdates(locationListenerGPS);
-
             }
         });
 
@@ -77,32 +89,36 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         if (!checkLocation())
             return;
 
-
         getLocation();
 
-
     }
+
 
     public void getLocation() {
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
 
+            methodRequiresTwoPermission();
+            return;
         }
         locationManager.requestLocationUpdates(
-                LocationManager.GPS_PROVIDER, 1 * 10*1000, 0, locationListenerGPS);
+                LocationManager.NETWORK_PROVIDER, 1 * 10*1000, 0, locationListenerNetwork);
 
-        Toast.makeText(this, "GPS provider started running", Toast.LENGTH_LONG).show();
+        Toast.makeText(this, "Network provider started running", Toast.LENGTH_LONG).show();
+        rippleBackground.startRippleAnimation();
+
     }
 
-    private final LocationListener locationListenerGPS = new LocationListener() {
+    private final LocationListener locationListenerNetwork = new LocationListener() {
         public void onLocationChanged(Location location) {
-            longitudeGPS = location.getLongitude();
-            latitudeGPS = location.getLatitude();
+            longitudeNetwork = location.getLongitude();
+            latitudeNetwork = location.getLatitude();
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
 
-                    Toast.makeText(MainActivity.this, "GPS Provider update Lat: "+latitudeGPS+ "   Lng: "+longitudeGPS, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, "Network Provider update Lat: "+longitudeNetwork+ "   Lng: "+latitudeNetwork, Toast.LENGTH_SHORT).show();
+
                 }
             });
         }
@@ -184,5 +200,41 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             EasyPermissions.requestPermissions(this, "Debe otorgar permisos de Ubicación para poder utilizar esta aplicación",
                     RC_CAMERA_AND_LOCATION, perms);
         }
+    }
+
+
+    public void sendEmergency(String token, String data) {
+
+        // prepare the Request
+        JsonObjectRequest getRequest = new JsonObjectRequest(Request.Method.GET, url+"/"+token+"/"+data, null,
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+
+                        Log.d("Response", response.toString());
+                        Toast.makeText(context,response.toString() , Toast.LENGTH_LONG).show();
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+
+                        Log.d("Error.Response", error.toString());
+                    }
+                }
+        )
+        /*{
+            @Override
+            public Map<String, String> getHeaders() throws AuthFailureError {
+                Map<String, String>  params = new HashMap<String, String>();
+                params.put("Authorization", "Bearer "+TOKEN);
+
+                return params;
+            }
+        }*/
+                ;
+
+// add it to the RequestQueue
+        queue.add(getRequest);
     }
 }
