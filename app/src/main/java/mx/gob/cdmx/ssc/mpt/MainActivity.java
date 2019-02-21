@@ -4,48 +4,52 @@ import android.Manifest;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
-import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Toast;
 
-import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.skyfishjy.library.RippleBackground;
 
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
+import java.util.regex.Pattern;
+
 
 import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
 
 public class MainActivity extends AppCompatActivity implements EasyPermissions.PermissionCallbacks {
 
-    String url ="http://10.13.9.190/mpt";
+    String url ="https://mipolicia.ssp.cdmx.gob.mx/mpt/rest/publico/transporte/alertas/";
+    String TOKEN= "5b76f0d15e0c0a7fb00d09744e9951243a534dec";
     RippleBackground rippleBackground;
     ImageView imgViewTruck;
     Context context;
@@ -59,11 +63,32 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
     private static final int RC_CAMERA_AND_LOCATION = 1;
 
+    SharedPreferences prefs;
+
+    Toolbar toolbar;
+    ActionBar actionBar;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         context = MainActivity.this;
+
+        toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+
+        actionBar = getSupportActionBar();
+        actionBar.setTitle(getString(R.string.app_name));
+        actionBar.setDisplayHomeAsUpEnabled(true);
+
+        prefs = getSharedPreferences("PreferenciasMPT", Context.MODE_PRIVATE);
+
+        prefs.getString("token", "Default");
+
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putString("token", TOKEN);
+        editor.commit();
+
 
         this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         queue = Volley.newRequestQueue(this);
@@ -107,6 +132,8 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         Toast.makeText(this, "Network provider started running", Toast.LENGTH_LONG).show();
         rippleBackground.startRippleAnimation();
 
+        //sendEmergency(TOKEN,"01");
+
     }
 
     private final LocationListener locationListenerNetwork = new LocationListener() {
@@ -117,7 +144,18 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 @Override
                 public void run() {
 
-                    Toast.makeText(MainActivity.this, "Network Provider update Lat: "+longitudeNetwork+ "   Lng: "+latitudeNetwork, Toast.LENGTH_SHORT).show();
+                    //Toast.makeText(MainActivity.this, "Network Provider update Lat: "+longitudeNetwork+ "   Lng: "+latitudeNetwork, Toast.LENGTH_SHORT).show();
+
+                    String[] separatedLat = String.valueOf(latitudeNetwork).split(Pattern.quote("."));
+                    String lat = separatedLat[1].substring(0,6);
+                    String[] separatedLng = String.valueOf(longitudeNetwork).split(Pattern.quote("."));
+                    String lng = separatedLng[1].substring(0,6);
+                    String data = lat+lng;
+
+                    Toast.makeText(MainActivity.this, " Data: "+data, Toast.LENGTH_SHORT).show();
+
+                    //sendEmergency(TOKEN,data);
+
 
                 }
             });
@@ -205,12 +243,12 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
     public void sendEmergency(String token, String data) {
 
-        // prepare the Request
-        JsonObjectRequest getRequest = new JsonObjectRequest(Request.Method.GET, url+"/"+token+"/"+data, null,
-                new Response.Listener<JSONObject>() {
+        StringRequest stringRequest = new StringRequest(
+                Request.Method.GET,
+                url+token+"/"+data,
+                new Response.Listener<String>() {
                     @Override
-                    public void onResponse(JSONObject response) {
-
+                    public void onResponse(String response) {
                         Log.d("Response", response.toString());
                         Toast.makeText(context,response.toString() , Toast.LENGTH_LONG).show();
                     }
@@ -218,23 +256,40 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-
                         Log.d("Error.Response", error.toString());
+                        Toast.makeText(context,error.toString() , Toast.LENGTH_LONG).show();
                     }
                 }
-        )
-        /*{
-            @Override
-            public Map<String, String> getHeaders() throws AuthFailureError {
-                Map<String, String>  params = new HashMap<String, String>();
-                params.put("Authorization", "Bearer "+TOKEN);
+        );
 
-                return params;
-            }
-        }*/
-                ;
+        // add it to the RequestQueue
+        queue.add(stringRequest);
+    }
 
-// add it to the RequestQueue
-        queue.add(getRequest);
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        //return super.onCreateOptionsMenu(menu);
+
+        MenuInflater inflater = getMenuInflater();
+
+        inflater.inflate(R.menu.menu_main, menu);
+
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        //return super.onOptionsItemSelected(item);
+
+        switch (item.getItemId()) {
+
+            case R.id.menu_setting:
+                startActivity(new Intent(context, SettingsActivity.class));
+                break;
+
+            default:
+                break;
+        }
+        return true;
     }
 }
