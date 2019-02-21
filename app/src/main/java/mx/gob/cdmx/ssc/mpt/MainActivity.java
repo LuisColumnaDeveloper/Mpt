@@ -19,6 +19,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -30,15 +31,11 @@ import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
-import com.android.volley.toolbox.JsonObjectRequest;
+
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.skyfishjy.library.RippleBackground;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
-
-import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -49,7 +46,8 @@ import pub.devrel.easypermissions.EasyPermissions;
 public class MainActivity extends AppCompatActivity implements EasyPermissions.PermissionCallbacks {
 
     String url ="https://mipolicia.ssp.cdmx.gob.mx/mpt/rest/publico/transporte/alertas/";
-    String TOKEN= "5b76f0d15e0c0a7fb00d09744e9951243a534dec";
+    //String TOKEN= "5b76f0d15e0c0a7fb00d09744e9951243a534dec";
+    String TOKEN= "";
     RippleBackground rippleBackground;
     ImageView imgViewTruck;
     Context context;
@@ -58,8 +56,6 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     RequestQueue queue;
 
     double longitudeNetwork, latitudeNetwork;
-    double longitudeGPS, latitudeGPS;
-    double longitudeBest, latitudeBest;
 
     private static final int RC_CAMERA_AND_LOCATION = 1;
 
@@ -79,15 +75,15 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
         actionBar = getSupportActionBar();
         actionBar.setTitle(getString(R.string.app_name));
-        actionBar.setDisplayHomeAsUpEnabled(true);
+
 
         prefs = getSharedPreferences("PreferenciasMPT", Context.MODE_PRIVATE);
 
-        prefs.getString("token", "Default");
+        TOKEN = prefs.getString("token", "Default");
 
-        SharedPreferences.Editor editor = prefs.edit();
-        editor.putString("token", TOKEN);
-        editor.commit();
+//        SharedPreferences.Editor editor = prefs.edit();
+//        editor.putString("token", TOKEN);
+//        editor.commit();
 
 
         this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
@@ -126,13 +122,33 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             methodRequiresTwoPermission();
             return;
         }
+
+        if(TOKEN.equals("Default")){
+
+
+            android.app.AlertDialog.Builder alertDialog2 = new android.app.AlertDialog.Builder(context);
+            alertDialog2.setTitle("Configuraciones");
+            alertDialog2.setMessage("Debes de tener un token para poder usar esta aplicación correctamente");
+            alertDialog2.setIcon(R.mipmap.ic_launcher);
+            alertDialog2.setPositiveButton("ACEPTAR",
+                    new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int which) {
+
+                        }
+                    });
+
+            alertDialog2.show();
+
+            return;
+        }
+
         locationManager.requestLocationUpdates(
                 LocationManager.NETWORK_PROVIDER, 1 * 10*1000, 0, locationListenerNetwork);
 
-        Toast.makeText(this, "Network provider started running", Toast.LENGTH_LONG).show();
+        //Toast.makeText(this, "Network provider started running TOKEN: "+TOKEN, Toast.LENGTH_LONG).show();
         rippleBackground.startRippleAnimation();
 
-        //sendEmergency(TOKEN,"01");
+        sendEmergency(TOKEN,"01");
 
     }
 
@@ -154,7 +170,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
                     Toast.makeText(MainActivity.this, " Data: "+data, Toast.LENGTH_SHORT).show();
 
-                    //sendEmergency(TOKEN,data);
+                    sendEmergency(TOKEN,data);
 
 
                 }
@@ -215,6 +231,8 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
         Toast.makeText(this,"Permisos aceptados" , Toast.LENGTH_LONG).show();
 
+        getLocation();
+
     }
 
     @Override
@@ -231,8 +249,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         //Manifest.permission.CAMERA,
         String[] perms = { Manifest.permission.ACCESS_FINE_LOCATION};
         if (EasyPermissions.hasPermissions(this, perms)) {
-            // Already have permission, do the thing
-            // ...
+            getLocation();
         } else {
             // Do not have permissions, request them now
             EasyPermissions.requestPermissions(this, "Debe otorgar permisos de Ubicación para poder utilizar esta aplicación",
@@ -292,4 +309,6 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         }
         return true;
     }
+
+
 }

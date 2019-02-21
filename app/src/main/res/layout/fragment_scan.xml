@@ -17,25 +17,23 @@
         app:title="@string/app_name"
         />
 
-    <ScrollView
-        android:layout_marginTop="70dp"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+    <!--<ScrollView-->
+        <!--android:layout_marginBottom="-520dp"-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="match_parent">-->
+<!--</ScrollView>-->
 
         <RelativeLayout
             xmlns:android="http://schemas.android.com/apk/res/android"
             xmlns:app="http://schemas.android.com/apk/res-auto"
             style="@style/MatchMatch"
+            android:layout_marginBottom="-10dp"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="match_parent">
 
             <!-- style="@style/MatchMatch"-->
 
-            <LinearLayout
-                android:orientation="vertical"
-                android:gravity="center"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+
                 <cn.bingoogolapple.qrcode.zbar.ZBarView
                     android:id="@+id/zbarview"
                     style="@style/MatchMatch"
@@ -64,8 +62,8 @@
                     app:qrcv_toolbarHeight="56dp"
                     app:qrcv_topOffset="80dp"
                     app:qrcv_verticalBias="-1" />
-            </LinearLayout>
+
         </RelativeLayout>
-    </ScrollView>
+
 
 </RelativeLayout>

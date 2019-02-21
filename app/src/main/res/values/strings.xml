@@ -5,5 +5,22 @@
 
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+
+    <!--================= SETTINGS ===================-->
+    <string name="title_settings">Configuración</string>
+    <!-- Fragment InfoToken -->
+    <string name="btn_scan">Escanear código QR</string>
+    <string name="lab_token">Token</string>
+
+    <!-- Fragment InfoToken -->
+
+    <string name="title_infoScan">Información</string>
+    <string name="lab_contentScan">Contenido de Escaneo</string>
+    <string name="btn_back">Regresar</string>
+    <string name="btn_save">Guardar Token</string>
+
+    <!-- Fragment Scan -->
     <string name="label_scan">Coloca el código en el centro del recuadro</string>
+
+
 </resources>

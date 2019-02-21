@@ -7,6 +7,8 @@ import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.os.Vibrator;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -14,6 +16,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 
 import cn.bingoogolapple.qrcode.core.QRCodeView;
@@ -95,11 +98,33 @@ public class FragmentScan extends Fragment implements QRCodeView.Delegate  {
         mZBarView.stopCamera();
         vibrate();
 
+        if(!result.equals("")){
+            initInfoScan(result.trim());
+        }
+
+
     }
 
     @Override
     public void onScanQRCodeOpenCameraError() {
         Log.e(TAG, "error");
+    }
+
+    private void initInfoScan(String result){
+
+
+        Bundle bundle = new Bundle();
+        bundle.putString("result",result); // Put anything what you want
+
+        FragmentManager fragmentManager;
+        FragmentTransaction fragmentTransaction;
+        fragmentManager = getFragmentManager();
+        fragmentTransaction = fragmentManager.beginTransaction();
+
+        FragmentInfoScan fragmentInfoScan= new FragmentInfoScan();
+        fragmentInfoScan.setArguments(bundle);
+        fragmentTransaction.replace(R.id.fragment, fragmentInfoScan);
+        fragmentTransaction.commit();
     }
 
 }

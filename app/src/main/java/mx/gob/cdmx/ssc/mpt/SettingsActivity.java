@@ -2,11 +2,18 @@ package mx.gob.cdmx.ssc.mpt;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.pm.ActivityInfo;
+import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 
+import java.util.List;
+
+import mx.gob.cdmx.ssc.mpt.Fragments.BaseFragment;
+import mx.gob.cdmx.ssc.mpt.Fragments.FragmentInfoScan;
 import mx.gob.cdmx.ssc.mpt.Fragments.FragmentToken;
 
 public class SettingsActivity extends AppCompatActivity {
@@ -18,6 +25,9 @@ public class SettingsActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
+
+        this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+
 
         prefs = getSharedPreferences("PreferenciasMPT", Context.MODE_PRIVATE);
 
