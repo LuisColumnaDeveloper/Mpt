@@ -64,6 +64,9 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     Toolbar toolbar;
     ActionBar actionBar;
 
+    int kont = 0;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -99,6 +102,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             public void onClick(View view) {
                 locationManager.removeUpdates(locationListenerNetwork);
                 rippleBackground.stopRippleAnimation();
+                kont = 0;
             }
         });
 
@@ -147,8 +151,10 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
         //Toast.makeText(this, "Network provider started running TOKEN: "+TOKEN, Toast.LENGTH_LONG).show();
         rippleBackground.startRippleAnimation();
+        if(kont<1){
+            sendEmergency(TOKEN,"01");
+        }
 
-        sendEmergency(TOKEN,"01");
 
     }
 
@@ -163,14 +169,32 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                     //Toast.makeText(MainActivity.this, "Network Provider update Lat: "+longitudeNetwork+ "   Lng: "+latitudeNetwork, Toast.LENGTH_SHORT).show();
 
                     String[] separatedLat = String.valueOf(latitudeNetwork).split(Pattern.quote("."));
-                    String lat = separatedLat[1].substring(0,6);
                     String[] separatedLng = String.valueOf(longitudeNetwork).split(Pattern.quote("."));
-                    String lng = separatedLng[1].substring(0,6);
-                    String data = lat+lng;
 
-                    Toast.makeText(MainActivity.this, " Data: "+data, Toast.LENGTH_SHORT).show();
 
-                    sendEmergency(TOKEN,data);
+
+                    if(separatedLat[1].length()>=5 && separatedLng[1].length()>=5){
+
+                        String lat = separatedLat[1].substring(0,6);
+                        String lng = separatedLng[1].substring(0,6);
+                        String data = lat+lng;
+
+                        Toast.makeText(MainActivity.this, " Data: "+data, Toast.LENGTH_SHORT).show();
+
+                        sendEmergency(TOKEN,data);
+                    }else{
+                        Toast.makeText(MainActivity.this, " No cumple la longitud de data lat: "+separatedLat[0].length()+"   lng: "+separatedLat[1].length(), Toast.LENGTH_SHORT).show();
+                    }
+
+//                    String lat = separatedLat[1].substring(0,6);
+//                    String lng = separatedLng[1].substring(0,6);
+//                    String data = lat+lng;
+//
+//                    Toast.makeText(MainActivity.this, " Data: "+data + "  lat: "+separatedLat[1].length()+"   lng: "+separatedLat[1].length(), Toast.LENGTH_SHORT).show();
+//
+//                    sendEmergency(TOKEN,data);
+
+
 
 
                 }
@@ -260,6 +284,8 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
     public void sendEmergency(String token, String data) {
 
+        kont++;
+
         StringRequest stringRequest = new StringRequest(
                 Request.Method.GET,
                 url+token+"/"+data,
@@ -267,7 +293,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                     @Override
                     public void onResponse(String response) {
                         Log.d("Response", response.toString());
-                        Toast.makeText(context,response.toString() , Toast.LENGTH_LONG).show();
+                        Toast.makeText(context,response.toString()+ "  "+kont , Toast.LENGTH_LONG).show();
                     }
                 },
                 new Response.ErrorListener() {
