@@ -30,6 +30,7 @@ import android.widget.Toast;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
+import com.android.volley.RetryPolicy;
 import com.android.volley.VolleyError;
 
 import com.android.volley.toolbox.StringRequest;
@@ -173,26 +174,23 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
 
 
-                    if(separatedLat[1].length()>=5 && separatedLng[1].length()>=5){
+                    if(separatedLat[1].length() >= 6 && separatedLng[1].length() >= 6){
 
                         String lat = separatedLat[1].substring(0,6);
                         String lng = separatedLng[1].substring(0,6);
                         String data = lat+lng;
 
                         Toast.makeText(MainActivity.this, " Data: "+data, Toast.LENGTH_SHORT).show();
-
+//                    Toast.makeText(MainActivity.this, " Data: "+data + "  lat: "+separatedLat[1].length()+"   lng: "+separatedLat[1].length(), Toast.LENGTH_SHORT).show();
                         sendEmergency(TOKEN,data);
                     }else{
                         Toast.makeText(MainActivity.this, " No cumple la longitud de data lat: "+separatedLat[0].length()+"   lng: "+separatedLat[1].length(), Toast.LENGTH_SHORT).show();
                     }
 
-//                    String lat = separatedLat[1].substring(0,6);
-//                    String lng = separatedLng[1].substring(0,6);
-//                    String data = lat+lng;
-//
-//                    Toast.makeText(MainActivity.this, " Data: "+data + "  lat: "+separatedLat[1].length()+"   lng: "+separatedLat[1].length(), Toast.LENGTH_SHORT).show();
-//
-//                    sendEmergency(TOKEN,data);
+
+
+
+
 
 
 
@@ -300,10 +298,28 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                     @Override
                     public void onErrorResponse(VolleyError error) {
                         Log.d("Error.Response", error.toString());
-                        Toast.makeText(context,error.toString() , Toast.LENGTH_LONG).show();
+                        //Toast.makeText(context,error.toString() , Toast.LENGTH_LONG).show();
+                        Toast.makeText(context,"Error al enviar", Toast.LENGTH_LONG).show();
                     }
                 }
         );
+
+        stringRequest.setRetryPolicy(new RetryPolicy() {
+            @Override
+            public int getCurrentTimeout() {
+                return 15000;
+            }
+
+            @Override
+            public int getCurrentRetryCount() {
+                return 15000;
+            }
+
+            @Override
+            public void retry(VolleyError error) throws VolleyError {
+
+            }
+        });
 
         // add it to the RequestQueue
         queue.add(stringRequest);
